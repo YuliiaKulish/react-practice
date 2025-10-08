@@ -21,6 +21,10 @@ export const App = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: null,
+  });
 
   const filteredProducts = products
     .filter(product => !selectedUserId || product.user.id === selectedUserId)
@@ -33,6 +37,56 @@ export const App = () => {
         selectedCategoryIds.includes(product.category.id)
       );
     });
+
+  const sortedProducts = [...filteredProducts];
+
+  if (sortConfig.key) {
+    sortedProducts.sort((a, b) => {
+      let valA;
+      let valB;
+
+      if (sortConfig.key === 'category') {
+        valA = a.category.title;
+        valB = b.category.title;
+      } else if (sortConfig.key === 'user') {
+        valA = a.user.name;
+        valB = b.user.name;
+      } else {
+        valA = a[sortConfig.key];
+        valB = b[sortConfig.key];
+      }
+
+      if (typeof valA === 'string') {
+        return sortConfig.direction === 'asc'
+          ? valA.localeCompare(valB)
+          : valB.localeCompare(valA);
+      }
+
+      return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+    });
+  }
+
+  const handleSort = key => {
+    setSortConfig(prev => {
+      if (prev.key !== key) {
+        return { key, direction: 'asc' };
+      }
+
+      if (prev.direction === 'asc') {
+        return { key, direction: 'desc' };
+      }
+
+      return { key: null, direction: null };
+    });
+  };
+
+  const getSortIcon = key => {
+    if (sortConfig.key !== key) {
+      return 'fa-sort';
+    }
+
+    return sortConfig.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+  };
 
   return (
     <div className="section">
@@ -137,6 +191,7 @@ export const App = () => {
                   setSelectedUserId(null);
                   setSearchTerm('');
                   setSelectedCategoryIds([]);
+                  setSortConfig({ key: null, direction: null });
                 }}
               >
                 Reset all filters
@@ -146,7 +201,7 @@ export const App = () => {
         </div>
 
         <div className="box table-container">
-          {filteredProducts.length === 0 ? (
+          {sortedProducts.length === 0 ? (
             <p data-cy="NoMatchingMessage">
               No products matching selected criteria
             </p>
@@ -160,9 +215,12 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       ID
-                      <a href="#/">
+                      <a href="#/" onClick={() => handleSort('id')}>
                         <span className="icon">
-                          <i data-cy="SortIcon" className="fas fa-sort" />
+                          <i
+                            data-cy="SortIcon"
+                            className={`fas ${getSortIcon('id')}`}
+                          />
                         </span>
                       </a>
                     </span>
@@ -171,9 +229,12 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       Product
-                      <a href="#/">
+                      <a href="#/" onClick={() => handleSort('name')}>
                         <span className="icon">
-                          <i data-cy="SortIcon" className="fas fa-sort-down" />
+                          <i
+                            data-cy="SortIcon"
+                            className={`fas ${getSortIcon('name')}`}
+                          />
                         </span>
                       </a>
                     </span>
@@ -182,9 +243,12 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       Category
-                      <a href="#/">
+                      <a href="#/" onClick={() => handleSort('category')}>
                         <span className="icon">
-                          <i data-cy="SortIcon" className="fas fa-sort-up" />
+                          <i
+                            data-cy="SortIcon"
+                            className={`fas ${getSortIcon('category')}`}
+                          />
                         </span>
                       </a>
                     </span>
@@ -193,9 +257,12 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       User
-                      <a href="#/">
+                      <a href="#/" onClick={() => handleSort('user')}>
                         <span className="icon">
-                          <i data-cy="SortIcon" className="fas fa-sort" />
+                          <i
+                            data-cy="SortIcon"
+                            className={`fas ${getSortIcon('user')}`}
+                          />
                         </span>
                       </a>
                     </span>
@@ -204,7 +271,7 @@ export const App = () => {
               </thead>
 
               <tbody>
-                {filteredProducts.map(product => (
+                {sortedProducts.map(product => (
                   <tr key={product.id} data-cy="Product">
                     <td className="has-text-weight-bold" data-cy="ProductId">
                       {product.id}
