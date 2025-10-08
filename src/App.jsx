@@ -19,10 +19,13 @@ const products = productsFromServer.map(product => {
 
 export const App = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredProducts = selectedUserId
-    ? products.filter(product => product.user.id === selectedUserId)
-    : products;
+  const filteredProducts = products
+    .filter(product => !selectedUserId || product.user.id === selectedUserId)
+    .filter(product => {
+      return product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
   return (
     <div className="section">
@@ -63,21 +66,25 @@ export const App = () => {
                   type="text"
                   className="input"
                   placeholder="Search"
-                  value="qwe"
+                  value={searchTerm}
+                  onChange={evt => setSearchTerm(evt.target.value)}
                 />
 
                 <span className="icon is-left">
                   <i className="fas fa-search" aria-hidden="true" />
                 </span>
 
-                <span className="icon is-right">
-                  {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-                  <button
-                    data-cy="ClearButton"
-                    type="button"
-                    className="delete"
-                  />
-                </span>
+                {searchTerm && (
+                  <span className="icon is-right">
+                    {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
+                    <button
+                      data-cy="ClearButton"
+                      type="button"
+                      className="delete"
+                      onClick={() => setSearchTerm('')}
+                    />
+                  </span>
+                )}
               </p>
             </div>
 
